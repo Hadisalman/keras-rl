@@ -42,8 +42,8 @@ class AtariProcessor(Processor):
 
 parser = argparse.ArgumentParser()
 parser.add_argument('--mode', choices=['train', 'test'], default='train')
-parser.add_argument('--env-name', type=str, default='BreakoutDeterministic-v3')
-parser.add_argument('--weights', type=str, default=None)
+parser.add_argument('--env-name', type=str, default='BreakoutDeterministic-v4')
+parser.add_argument('--weights', type=str, default='../pretrained_weights/dqn_Breakout-v0_weights_750000.h5f')
 args = parser.parse_args()
 
 # Get the environment and extract the number of actions.
