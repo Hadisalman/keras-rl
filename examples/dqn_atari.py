@@ -51,7 +51,7 @@ class AtariProcessor(Processor):
 parser = argparse.ArgumentParser()
 parser.add_argument('--mode', choices=['train', 'test'], default='train')
 parser.add_argument('--env-name', type=str, default='BreakoutDeterministic-v4')
-parser.add_argument('--weights', type=str, default='../pretrained_weights/dqn_Breakout-v0_weights_750000.h5f')
+parser.add_argument('--weights', type=str, default='dqn_BreakoutDeterministic-v4_weights_500000.h5f')
 args = parser.parse_args()
 
 # Get the environment and extract the number of actions.
@@ -116,11 +116,14 @@ if args.mode == 'train':
     log_filename = 'dqn_{}_log.json'.format(args.env_name)
     callbacks = [ModelIntervalCheckpoint(checkpoint_weights_filename, interval=250000)]
     callbacks += [FileLogger(log_filename, interval=100)]
-    dqn.fit(env, callbacks=callbacks, nb_steps=1750000, log_interval=10000)
+
+    #weights_filename = args.weights
+    #dqn.load_weights(weights_filename)    
+    dqn.fit(env, callbacks=callbacks, nb_steps=3000000, log_interval=10000)
 
     # After training is done, we save the final weights one more time.
     dqn.save_weights(weights_filename, overwrite=True)
-
+	
     # Finally, evaluate our algorithm for 10 episodes.
     dqn.test(env, nb_episodes=10, visualize=False)
 elif args.mode == 'test':
@@ -128,4 +131,4 @@ elif args.mode == 'test':
     if args.weights:
         weights_filename = args.weights
     dqn.load_weights(weights_filename)
-    dqn.test(env, nb_episodes=10, visualize=True)
+    dqn.test(env, nb_episodes=10, visualize=False)
