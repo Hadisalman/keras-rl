@@ -1,10 +1,13 @@
 from __future__ import division
 import argparse
+import os
+os.environ["CUDA_VISIBLE_DEVICES"]="0"
 
 from PIL import Image
 import numpy as np
 import gym
 
+import tensorflow as tf
 from keras.models import Sequential
 from keras.layers import Dense, Activation, Flatten, Convolution2D, Permute
 from keras.optimizers import Adam
@@ -16,6 +19,11 @@ from rl.memory import SequentialMemory
 from rl.core import Processor
 from rl.callbacks import FileLogger, ModelIntervalCheckpoint
 
+config = tf.ConfigProto()
+config.gpu_options.allow_growth=True
+config.gpu_options.per_process_gpu_memory_fraction = 1
+sess = tf.Session(config=config)
+K.set_session(sess)
 
 INPUT_SHAPE = (84, 84)
 WINDOW_LENGTH = 4
