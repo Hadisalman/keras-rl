@@ -1,7 +1,6 @@
 from __future__ import division
 import argparse
 import os
-os.environ["CUDA_VISIBLE_DEVICES"]="0"
 
 from PIL import Image
 import numpy as np
@@ -19,7 +18,10 @@ from rl.memory import SequentialMemory
 from rl.core import Processor
 from rl.callbacks import FileLogger, ModelIntervalCheckpoint
 
+os.environ["CUDA_VISIBLE_DEVICES"]="0"
+
 config = tf.ConfigProto()
+config.allow_soft_placement=True 
 config.gpu_options.allow_growth=True
 config.gpu_options.per_process_gpu_memory_fraction = 1
 sess = tf.Session(config=config)
