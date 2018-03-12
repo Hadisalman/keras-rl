@@ -16,7 +16,7 @@ from rl.agents.dqn import DQNAgent
 from rl.policy import LinearAnnealedPolicy, BoltzmannQPolicy, EpsGreedyQPolicy
 from rl.memory import SequentialMemory
 from rl.core import Processor
-from rl.callbacks import FileLogger, ModelIntervalCheckpoint
+from rl.callbacks import FileLogger, ModelIntervalCheckpoint, tensorboardLogger
 
 os.environ["CUDA_VISIBLE_DEVICES"]="0"
 
@@ -30,6 +30,7 @@ K.set_session(sess)
 INPUT_SHAPE = (84, 84)
 WINDOW_LENGTH = 4
 
+log_parent_dir = './train_log'
 
 class AtariProcessor(Processor):
     def process_observation(self, observation):
@@ -110,25 +111,49 @@ dqn = DQNAgent(model=model, nb_actions=nb_actions, policy=policy, memory=memory,
                train_interval=4, delta_clip=1.)
 dqn.compile(Adam(lr=.00025), metrics=['mae'])
 
+def make_log_dir():
+    import datetime, os
+    current_timestamp = datetime.datetime.now().strftime('%Y-%m-%d_%H-%M-%S')
+    log_dir = os.path.join(log_parent_dir, args.env_name, current_timestamp)
+    os.makedirs(log_dir)
+    os.makedirs(os.path.join(log_dir, 'weights'))
+    os.makedirs(os.path.join(log_dir, 'replay_memory'))
+    os.makedirs(os.path.join(log_dir, 'gym_monitor'))
+    # create empty logfiles now
+    # log_files = {
+    #                   'train_loss': os.path.join(lod_dir, 'train_loss.txt'),
+    #                   'train_episode_reward': os.path.join(lod_dir, 'train_episode_reward.txt'),
+    #                   'test_episode_reward': os.path.join(lod_dir, 'test_episode_reward.txt')
+    #                 }
+    # for key in self.log_files:
+    #   open(os.path.join(self.log_dir, self.log_files[key]), 'a').close()
+log_dir=''
 if args.mode == 'train':
+    make_log_dir()
     # Okay, now it's time to learn something! We capture the interrupt exception so that training
     # can be prematurely aborted. Notice that you can the built-in Keras callbacks!
-    weights_filename = 'dqn_{}_weights.h5f'.format(args.env_name)
-    checkpoint_weights_filename = 'dqn_' + args.env_name + '_weights_{step}.h5f'
-    log_filename = 'dqn_{}_log.json'.format(args.env_name)
+    weights_filename =os.path.join(log_dir, 'weights','dqn_{}_weights.h5f'.format(args.env_name))
+    checkpoint_weights_filename = os.path.join(log_dir, '{step}.h5f')
     callbacks = [ModelIntervalCheckpoint(checkpoint_weights_filename, interval=250000)]
-    callbacks += [FileLogger(log_filename, interval=100)]
+    
+    # log_filename = 'dqn_{}_log.json'.format(args.env_name)
+    # callbacks += [FileLogger(log_filename, interval=100)]
+    
+    callbacks += [tensorboardLogger(log_dir)]
 
     #weights_filename = args.weights
     #dqn.load_weights(weights_filename)    
-    dqn.fit(env, callbacks=callbacks, nb_steps=3000000, log_interval=10000)
+    dqn.fit(env, callbacks=callbacks, nb_steps=3000000, log_interval=10000, verbose=1)
 
     # After training is done, we save the final weights one more time.
     dqn.save_weights(weights_filename, overwrite=True)
-	
+    
     # Finally, evaluate our algorithm for 10 episodes.
     dqn.test(env, nb_episodes=10, visualize=False)
+
+
 elif args.mode == 'test':
+
     weights_filename = 'dqn_{}_weights.h5f'.format(args.env_name)
     if args.weights:
         weights_filename = args.weights
