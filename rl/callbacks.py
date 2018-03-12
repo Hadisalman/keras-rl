@@ -455,6 +455,3 @@ class tensorboardLogger(Callback):
         
         self.step += 1
 
-    # def on_action_begin(self,action):
-
-    #     

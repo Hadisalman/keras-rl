@@ -33,23 +33,23 @@ WINDOW_LENGTH = 4
 log_parent_dir = './train_log'
 
 class AtariProcessor(Processor):
-    def process_observation(self, observation):
-        assert observation.ndim == 3  # (height, width, channel)
-        img = Image.fromarray(observation)
-        img = img.resize(INPUT_SHAPE).convert('L')  # resize and convert to grayscale
-        processed_observation = np.array(img)
-        assert processed_observation.shape == INPUT_SHAPE
-        return processed_observation.astype('uint8')  # saves storage in experience memory
+	def process_observation(self, observation):
+		assert observation.ndim == 3  # (height, width, channel)
+		img = Image.fromarray(observation)
+		img = img.resize(INPUT_SHAPE).convert('L')  # resize and convert to grayscale
+		processed_observation = np.array(img)
+		assert processed_observation.shape == INPUT_SHAPE
+		return processed_observation.astype('uint8')  # saves storage in experience memory
 
-    def process_state_batch(self, batch):
-        # We could perform this processing step in `process_observation`. In this case, however,
-        # we would need to store a `float32` array instead, which is 4x more memory intensive than
-        # an `uint8` array. This matters if we store 1M observations.
-        processed_batch = batch.astype('float32') / 255.
-        return processed_batch
+	def process_state_batch(self, batch):
+		# We could perform this processing step in `process_observation`. In this case, however,
+		# we would need to store a `float32` array instead, which is 4x more memory intensive than
+		# an `uint8` array. This matters if we store 1M observations.
+		processed_batch = batch.astype('float32') / 255.
+		return processed_batch
 
-    def process_reward(self, reward):
-        return np.clip(reward, -1., 1.)
+	def process_reward(self, reward):
+		return np.clip(reward, -1., 1.)
 
 parser = argparse.ArgumentParser()
 parser.add_argument('--mode', choices=['train', 'test'], default='train')
@@ -67,13 +67,13 @@ nb_actions = env.action_space.n
 input_shape = (WINDOW_LENGTH,) + INPUT_SHAPE
 model = Sequential()
 if K.image_dim_ordering() == 'tf':
-    # (width, height, channels)
-    model.add(Permute((2, 3, 1), input_shape=input_shape))
+	# (width, height, channels)
+	model.add(Permute((2, 3, 1), input_shape=input_shape))
 elif K.image_dim_ordering() == 'th':
-    # (channels, width, height)
-    model.add(Permute((1, 2, 3), input_shape=input_shape))
+	# (channels, width, height)
+	model.add(Permute((1, 2, 3), input_shape=input_shape))
 else:
-    raise RuntimeError('Unknown image_dim_ordering.')
+	raise RuntimeError('Unknown image_dim_ordering.')
 model.add(Convolution2D(32, 8, 8, subsample=(4, 4)))
 model.add(Activation('relu'))
 model.add(Convolution2D(64, 4, 4, subsample=(2, 2)))
@@ -98,7 +98,7 @@ processor = AtariProcessor()
 # (low eps). We also set a dedicated eps value that is used during testing. Note that we set it to 0.05
 # so that the agent still performs some random actions. This ensures that the agent cannot get stuck.
 policy = LinearAnnealedPolicy(EpsGreedyQPolicy(), attr='eps', value_max=1., value_min=.1, value_test=.05,
-                              nb_steps=1000000)
+							  nb_steps=1000000)
 
 # The trade-off between exploration and exploitation is difficult and an on-going research topic.
 # If you want, you can experiment with the parameters or use a different policy. Another popular one
@@ -107,8 +107,8 @@ policy = LinearAnnealedPolicy(EpsGreedyQPolicy(), attr='eps', value_max=1., valu
 # Feel free to give it a try!
 
 dqn = DQNAgent(model=model, nb_actions=nb_actions, policy=policy, memory=memory,
-               processor=processor, nb_steps_warmup=50000, gamma=.99, target_model_update=10000,
-               train_interval=4, delta_clip=1.)
+			   processor=processor, nb_steps_warmup=50000, gamma=.99, target_model_update=10000,
+			   train_interval=4, delta_clip=1.)
 dqn.compile(Adam(lr=.00025), metrics=['mae'])
 
 def make_log_dir():
@@ -153,7 +153,6 @@ if args.mode == 'train':
 
 
 elif args.mode == 'test':
-
     weights_filename = 'dqn_{}_weights.h5f'.format(args.env_name)
     if args.weights:
         weights_filename = args.weights
